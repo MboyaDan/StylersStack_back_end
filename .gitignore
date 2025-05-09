@@ -1,0 +1,22 @@
+# Firebase service account keys
+firebase_admin_sdk.json
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Environment and config
+.env
+*.env
+*.ini
+
+# Alembic cache
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# VS Code settings (optional)
+.vscode/
