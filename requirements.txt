@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+psycopg2-binary
+python-dotenv
+python-jose[cryptography]
+requests
+firebase-admin==6.4.0
+pydantic-settings>=2.0.0

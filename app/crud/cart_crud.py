@@ -1,0 +1,1 @@
+#Database Logic per resource
