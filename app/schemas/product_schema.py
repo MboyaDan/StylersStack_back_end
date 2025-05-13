@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,ConfigDict
 from typing import Optional
 from datetime import datetime
 from .category_schema import Category
@@ -18,5 +18,4 @@ class Product(ProductBase):
     created_at: datetime
     category: Category
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes = True)

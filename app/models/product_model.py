@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Text, Numeric, ForeignKey, TIMESTAMP,text
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -11,6 +11,6 @@ class Product(Base):
     price = Column(Numeric(10, 2), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"))
     image_url = Column(Text)
-    created_at = Column(TIMESTAMP, server_default="CURRENT_TIMESTAMP")
+    created_at = Column(TIMESTAMP, server_default= text("CURRENT_TIMESTAMP"))
 
     category = relationship("Category")
