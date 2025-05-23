@@ -1,5 +1,6 @@
 import os
 import sys
+from dotenv import load_dotenv
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
@@ -13,11 +14,17 @@ from app.config import settings
 from app.database import Base  # <- Base from database.py
 from app import models          # <- Make sure this imports all your models
 
+#load the .env file so alembic can use the environment variable
+load_dotenv()
+
+#Now you can access the variable from .env
+DATABASE_URL = settings.database_url
+
 # Alembic Config object
 config = context.config
 
 # Override the DB URL in alembic.ini with env var
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 # Logging
 if config.config_file_name is not None:

@@ -1,5 +1,6 @@
-from pydantic import BaseModel,ConfigDict
-from typing import Optional
+#Pydantic schema that validates data coming in and formats data going out via the API.
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, List
 from datetime import datetime
 from .category_schema import Category
 
@@ -8,7 +9,12 @@ class ProductBase(BaseModel):
     description: Optional[str]
     price: float
     category_id: int
-    image_url: Optional[str]
+    images: List[str]
+    stock: int
+    discount: Optional[float]
+    rating: int
+    sizes: List[str]
+    colors: List[int]
 
 class ProductCreate(ProductBase):
     pass
@@ -18,4 +24,4 @@ class Product(ProductBase):
     created_at: datetime
     category: Category
 
-    model_config = ConfigDict(from_attributes = True)
+    model_config = ConfigDict(from_attributes=True)
