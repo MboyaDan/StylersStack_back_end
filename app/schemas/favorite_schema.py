@@ -1,6 +1,11 @@
-# favorite_schema.py
+# app/schemas/favorite_schema.py
 from pydantic import BaseModel
-from typing import List
+from typing import Optional
+
+
+class FavoriteCreate(BaseModel):
+    product_id: int
+    user_uid: str
 
 
 class FavoriteOut(BaseModel):
