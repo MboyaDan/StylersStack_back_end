@@ -28,7 +28,7 @@ product_seed_data = [
         "category_name": "Jacket"
     },
     {
-        "name": "Canvas Sneakers",
+        "name": "Canvas Shirts",
         "description": "Comfortable unisex sneakers for daily wear",
         "price": 45.50,
         "stock": 85,
@@ -37,7 +37,7 @@ product_seed_data = [
         "colors": ["White", "Grey"],
         "rating": 4,
         "discount": 5.0,
-        "category_name": "T-Shirt"  # Adjust this as needed
+        "category_name": "T-Shirt" 
     },
     {
         "name": "Slim Fit Chinos",
