@@ -1,4 +1,3 @@
-# notification_service.py
 import os
 import httpx
 
