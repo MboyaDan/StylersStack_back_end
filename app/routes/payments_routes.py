@@ -60,6 +60,6 @@ def refund_payment(
 async def mpesa_callback(
     request: Request,
     db: Session = Depends(get_db),
-    background_tasks: BackgroundTasks = None
+    background_tasks: BackgroundTasks = Depends()
 ):
     return await payment_service.handle_mpesa_callback(request, db, background_tasks)
