@@ -1,27 +1,28 @@
-import os
-import httpx
+from firebase_admin import messaging
+import logging
+from typing import Optional
 
-FIREBASE_SERVER_KEY = os.getenv("FIREBASE_SERVER_KEY")  # securely stored env var
+logger = logging.getLogger(__name__)
 
-async def send_fcm_notification(token: str, title: str, body: str, data: dict = None):
-    headers = {
-        "Authorization": f"key={FIREBASE_SERVER_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "to": token,
-        "notification": {
-            "title": title,
-            "body": body,
-        },
-        "data": {
-            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+def send_fcm_notification(token: str, title: str, body: str, data: Optional[dict] = None):
+    """
+    Sends FCM notification using Firebase Admin SDK (HTTP v1 API).
+    """
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title=title,
+            body=body
+        ),
+        token=token,
+        data=data or {
+            "click_action": "FLUTTER_NOTIFICATION_CLICK"
         }
-    }
-    if data:
-        payload["data"].update(data)
+    )
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post("https://fcm.googleapis.com/fcm/send", headers=headers, json=payload)
-        if response.status_code != 200:
-            raise Exception(f"FCM Failed: {response.text}")
+    try:
+        response = messaging.send(message)
+        logger.info(f"FCM notification sent successfully: {response}")
+        return {"message_id": response}
+    except Exception as e:
+        logger.exception(f"Failed to send FCM notification: {e}")
+        raise Exception("FCM send failed")

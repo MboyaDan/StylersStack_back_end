@@ -59,7 +59,7 @@ def refund_payment(
 @router.post("/mpesa/callback")
 async def mpesa_callback(
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    background_tasks: BackgroundTasks = Depends()
 ):
     return await payment_service.handle_mpesa_callback(request, db, background_tasks)

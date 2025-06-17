@@ -10,7 +10,22 @@ try:
         firebase_admin.initialize_app(cred)
 except Exception as e:
     raise RuntimeError(f"Failed to initialize Firebase Admin SDK: {e}")
+def extract_firebase_token(request: Request):
+    """
+    Extracts the Firebase ID token from the Authorization header of the request.
 
+    Returns:
+        str: The Firebase ID token.
+    
+    Raises:
+        HTTPException: If the token is missing or malformed.
+    """
+    auth_header = request.headers.get("Authorization")
+
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+
+    return auth_header.split("Bearer ")[1]
 def verify_firebase_token(request: Request):
     """
     Verifies the Firebase ID token from the Authorization header of the request.
