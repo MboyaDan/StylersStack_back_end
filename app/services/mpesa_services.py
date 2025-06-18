@@ -23,6 +23,11 @@ def get_access_token() -> Optional[str]:
             timeout=10
         )
 
+        print(f"MPESA consumer_key: {consumer_key}")
+        print(f"MPESA consumer_secret: {consumer_secret}")
+        print(f"Authorization header: Basic {credentials}")
+
+
         if response.status_code != 200:
             logging.error(f"[M-Pesa Auth] Failed to get token: {response.status_code} - {response.text}")
             return None
@@ -73,6 +78,9 @@ def initiate_mpesa_payment(payment) -> Dict[str, Any]:
             "AccountReference": payment.order_id,
             "TransactionDesc": "Order Payment"
         }
+        #loging the phone number used for payment
+        logging.info(f"Full M-Pesa STK payload: {payload}")
+
 
         headers = {
             "Authorization": f"Bearer {access_token}",

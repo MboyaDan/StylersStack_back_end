@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.payment_model import Payment
 from app.schemas.payment_schema import PaymentCreate
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 def create_payment(db: Session, payment_data: PaymentCreate, user_id: str) -> Payment:
     payment_intent_id = str(uuid.uuid4())
@@ -17,8 +17,12 @@ def create_payment(db: Session, payment_data: PaymentCreate, user_id: str) -> Pa
         payment_method=payment_data.payment_method.lower(),
         payment_intent_id=payment_intent_id,
         status=status,
-        created_at=datetime.utcnow()
+        phone_number=payment_data.phone_number,
+        checkout_request_id=payment_data.checkout_request_id,
+        created_at=datetime.now(timezone.utc),
     )
+    print(f"[create_payment] Received method={payment_data.payment_method}, phone={payment_data.phone_number}")
+
 
     db.add(payment)
     db.commit()
@@ -47,3 +51,12 @@ def process_refund(db: Session, payment_intent_id: str, amount: float) -> bool:
         db.commit()
         return True
     return False
+
+def update_checkout_id(db: Session, payment_intent_id: str, checkout_request_id: str) -> Payment | None:
+    payment = get_payment_by_intent_id(db, payment_intent_id)
+    if payment:
+        payment.checkout_request_id = checkout_request_id
+        db.commit()
+        db.refresh(payment)
+        return payment
+    return None

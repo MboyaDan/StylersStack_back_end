@@ -16,5 +16,6 @@ class Payment(Base):
     payment_intent_id = Column(String, unique=True, nullable=True)  # For Stripe payments
     status = Column(String, default="pending")  # 'pending', 'succeeded', 'failed'
     created_at = Column(DateTime(timezone=True),default= lambda:datetime.now(timezone.utc))
+    checkout_request_id = Column(String, nullable=True)  # For M-Pesa payments
 
     user = relationship("User", back_populates="payments")
