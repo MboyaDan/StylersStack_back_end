@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from sqlalchemy import func
+from datetime import datetime, timezone
 from app.database import SessionLocal
 from app.models import Product, Category
 
@@ -37,7 +38,7 @@ product_seed_data = [
         "colors": ["White", "Grey"],
         "rating": 4,
         "discount": 5.0,
-        "category_name": "T-Shirt" 
+        "category_name": "T-Shirt"
     },
     {
         "name": "Slim Fit Chinos",
@@ -50,6 +51,42 @@ product_seed_data = [
         "rating": 5,
         "discount": 15.0,
         "category_name": "Pant"
+    },
+    {
+        "name": "Budget T-Shirt",
+        "description": "Simple t-shirt for only 1 Ksh",
+        "price": 1.00,
+        "stock": 500,
+        "images": ["https://via.placeholder.com/150"],
+        "sizes": ["S", "M", "L"],
+        "colors": ["White"],
+        "rating": 3,
+        "discount": 0.0,
+        "category_name": "T-Shirt"
+    },
+    {
+        "name": "Promo Pants",
+        "description": "Special promo pants for only 1 Ksh",
+        "price": 1.00,
+        "stock": 300,
+        "images": ["https://via.placeholder.com/150"],
+        "sizes": ["30", "32"],
+        "colors": ["Khaki"],
+        "rating": 3,
+        "discount": 0.0,
+        "category_name": "Pant"
+    },
+    {
+        "name": "Clearance Jacket",
+        "description": "Clearance jacket at a throwaway price",
+        "price": 1.00,
+        "stock": 150,
+        "images": ["https://via.placeholder.com/150"],
+        "sizes": ["M", "L"],
+        "colors": ["Blue"],
+        "rating": 2,
+        "discount": 0.0,
+        "category_name": "Jacket"
     }
 ]
 
@@ -57,26 +94,44 @@ def seed_products():
     db: Session = SessionLocal()
     try:
         for data in product_seed_data:
-            category = db.query(Category).filter_by(name=data["category_name"]).first()
+            # Check if product already exists by name
+            existing_product = db.query(Product).filter_by(name=data["name"]).first()
+            if existing_product:
+                print(f"ℹ️ Skipping '{data['name']}' - Already exists.")
+                continue
+
+            # Case-insensitive category lookup
+            category = db.query(Category).filter(
+                func.lower(Category.name) == data["category_name"].lower()
+            ).first()
+            
+
             if not category:
                 print(f"⚠️ Skipping '{data['name']}' - Category '{data['category_name']}' not found.")
+                continue
+
+            # Convert color names to integer hex values
+            try:
+                color_values = [color_map[color] for color in data["colors"]]
+            except KeyError as e:
+                print(f"⚠️ Skipping '{data['name']}' - Unknown color: {e}")
                 continue
 
             product_data = {
                 **data,
                 "category_id": category.id,
-                "colors": [color_map[c] for c in data["colors"]],
-                "created_at": datetime.utcnow()
+                "colors": color_values,
+                "created_at": datetime.now(timezone.utc)
             }
 
-            # Remove category_name from the final product fields
             product_data.pop("category_name")
 
             product = Product(**product_data)
             db.add(product)
+            print(f"✅ Added '{data['name']}' to category '{category.name}'")
 
         db.commit()
-        print("✅ Products seeded successfully.")
+        print("✅ All products seeded successfully.")
     except Exception as e:
         db.rollback()
         print("❌ Error seeding products:", e)

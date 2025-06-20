@@ -1,5 +1,6 @@
 import base64
 import requests
+import json
 import os
 import logging
 from datetime import datetime
@@ -23,9 +24,7 @@ def get_access_token() -> Optional[str]:
             timeout=10
         )
 
-        print(f"MPESA consumer_key: {consumer_key}")
-        print(f"MPESA consumer_secret: {consumer_secret}")
-        print(f"Authorization header: Basic {credentials}")
+  
 
 
         if response.status_code != 200:
@@ -78,6 +77,8 @@ def initiate_mpesa_payment(payment) -> Dict[str, Any]:
             "AccountReference": payment.order_id,
             "TransactionDesc": "Order Payment"
         }
+        logging.info(f"[M-Pesa] Sending AccountReference: {payment.order_id}")
+
         #loging the phone number used for payment
         logging.info(f"Full M-Pesa STK payload: {payload}")
 

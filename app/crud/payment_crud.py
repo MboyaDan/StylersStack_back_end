@@ -35,14 +35,13 @@ def get_payment_by_order_id(db: Session, order_id: str) -> Payment | None:
 def get_payment_by_intent_id(db: Session, intent_id: str) -> Payment | None:
     return db.query(Payment).filter(Payment.payment_intent_id == intent_id).first()
 
-def update_payment_status(db: Session, payment_intent_id: str, status: str) -> Payment | None:
+def update_payment_status(db: Session, payment_intent_id: str, status: str) -> bool:
     payment = get_payment_by_intent_id(db, payment_intent_id)
     if payment:
         payment.status = status
         db.commit()
-        db.refresh(payment)
-        return payment
-    return None
+        return True
+    return False
 
 def process_refund(db: Session, payment_intent_id: str, amount: float) -> bool:
     payment = get_payment_by_intent_id(db, payment_intent_id)
@@ -60,3 +59,5 @@ def update_checkout_id(db: Session, payment_intent_id: str, checkout_request_id:
         db.refresh(payment)
         return payment
     return None
+def get_payment_by_checkout_id(db: Session, checkout_id: str) -> Payment | None:
+    return db.query(Payment).filter(Payment.checkout_request_id == checkout_id).first()

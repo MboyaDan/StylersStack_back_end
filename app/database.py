@@ -15,5 +15,5 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Base class for all models to inherit from
 Base = declarative_base()
 
-
- 
+#import all models to ensure they are registered with SQLAlchemy
+import app.models  # This will import all models defined in the app/models package
