@@ -10,7 +10,7 @@ from app.utils.firebase_auth import verify_firebase_token
 router = APIRouter(prefix="/favorites", tags=["Favorites"])
 
 @router.post("/", response_model=FavoriteOut)
-def create_favorite(
+def add_favorite(
     favorite: FavoriteCreate,
     db: Session = Depends(get_db),
     user=Depends(verify_firebase_token),
