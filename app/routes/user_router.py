@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
 import logging
+
 from app.dependencies import get_db
 from app.utils.firebase_auth import verify_firebase_token
 from app.schemas.user_schema import FCMTokenUpdate
@@ -16,26 +16,43 @@ def update_fcm_token(
     db: Session = Depends(get_db),
     user=Depends(verify_firebase_token)
 ):
-    logger.info(f"FCM update request: uid={user['uid']}, token={data.fcm_token}")
+    uid = user["uid"]
+    email = user.get("email")
 
-    db_user: User = db.query(User).filter(User.uid == user["uid"]).first()
+    logger.info(f"FCM update request: uid={uid}, token={data.fcm_token}")
+
+    db_user: User = db.query(User).filter(User.uid == uid).first()
+
     if not db_user:
-        logger.warning(f"User not found: {user['uid']}")
-        raise HTTPException(status_code=404, detail="User not found")
+        logger.warning(f"User not found in DB: {uid}, creating new user")
 
-    logger.info(f"DB user found: {db_user.uid}, current token: {db_user.fcm_token}")
+        # Only uid and email used to match Flutter's UserModel
+        db_user = User(
+            uid=uid,
+            email=email,
+            fcm_token=data.fcm_token
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
 
+        logger.info(f"New user created and FCM token stored: {db_user.uid}")
+        return {"message": "User created and FCM token saved"}
+
+    # Validate the incoming token
     if not data.fcm_token or len(data.fcm_token) < 10:
-        logger.warning(f"Invalid FCM token from user {user['uid']}: {data.fcm_token}")
+        logger.warning(f"Invalid FCM token from user {uid}: {data.fcm_token}")
         raise HTTPException(status_code=400, detail="Invalid FCM token")
 
+    # Check if the token is already the same
     if db_user.fcm_token == data.fcm_token:
-        logger.info(f"No update needed, token already up-to-date for user {user['uid']}")
+        logger.info(f"No update needed, token already up-to-date for user {uid}")
         return {"message": "FCM token already up-to-date"} 
 
+    # Update the token
     db_user.fcm_token = data.fcm_token
     db.commit()
     db.refresh(db_user)
 
-    logger.info(f"FCM token updated for user {user['uid']} to: {db_user.fcm_token}")
+    logger.info(f"FCM token updated for user {uid} to: {db_user.fcm_token}")
     return {"message": "FCM token updated successfully"}

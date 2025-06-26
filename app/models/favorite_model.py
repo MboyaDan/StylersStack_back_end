@@ -13,7 +13,7 @@ class Favorite(Base):
     user_uid = Column(String, ForeignKey("users.uid"))
     product_id = Column(Integer, ForeignKey("products.id"))
 
-    __table_args__ = (UniqueConstraint('user_uid', 'product_id', name='user_product_unique'),)
+    __table_args__ = (UniqueConstraint('user_uid', 'product_id', name='uq_fav_user_product'),)
 
     product = relationship("Product")
     user = relationship("User")

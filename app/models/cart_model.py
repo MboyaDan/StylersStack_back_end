@@ -12,8 +12,8 @@ class Cart(Base):
     added_at   = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        UniqueConstraint("user_uid", "product_id", name="user_product_unique"),
+        UniqueConstraint("user_uid", "product_id", name="uq_cart_user_product"),
     )
 
-    product = relationship("Product")   # gives you product.name, price, image, …
+    product = relationship("Product")  
     user    = relationship("User")

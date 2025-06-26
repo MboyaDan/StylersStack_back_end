@@ -10,3 +10,5 @@ firebase-admin==6.4.0
 pydantic-settings>=2.0.0
 pydantic[email]
 httpx 
+redis[asyncio]
+slowapi
