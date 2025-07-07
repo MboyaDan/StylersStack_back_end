@@ -1,5 +1,5 @@
 #SQLAlchemy ORM class that defines how products are stored in the DB.
-from sqlalchemy import Column, Integer, String, Text, Numeric, ForeignKey, TIMESTAMP, text, Float
+from sqlalchemy import Column, Integer, String, Text, Numeric, ForeignKey, TIMESTAMP, text, Float, Boolean
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -19,5 +19,7 @@ class Product(Base):
     sizes = Column(ARRAY(String), default=[])  # List of sizes (e.g., ['S', 'M'])
     colors = Column(ARRAY(Integer), default=[])  # List of int ARGB values
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"))
+    is_archived = Column(Boolean, default=False, server_default="false")
+  # 0 for active, 1 for archived
 
     category = relationship("Category")

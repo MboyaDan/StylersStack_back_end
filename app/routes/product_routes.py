@@ -13,6 +13,12 @@ from app.limiter import limiter
 from app.utils.cache import get_cache, set_cache, delete_cache
 import os
 import asyncio
+from fastapi import Form, File, UploadFile
+from app.utils.firebase_upload import upload_image_to_firebase
+from app.models.product_model import Product
+from app.schemas.product_schema import Product as ProductOut
+
+from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -89,3 +95,4 @@ def delete(
     asyncio.create_task(delete_cache(f"product:{product_id}"))
     asyncio.create_task(delete_cache("products:all"))
     return ProductOut.model_validate(deleted)
+

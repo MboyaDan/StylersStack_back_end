@@ -43,7 +43,7 @@ product_seed_data = [
     {
         "name": "Slim Fit Chinos",
         "description": "Modern cut chinos for casual or office wear",
-        "price": 39.99,
+        "price": 39.939,
         "stock": 200,
         "images": ["https://via.placeholder.com/150"],
         "sizes": ["30", "32", "34"],

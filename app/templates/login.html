@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+{% block content %}
+<h2 class="text-xl font-bold mb-4">Admin Login</h2>
+
+<form id="firebaseLoginForm" method="POST" class="bg-white p-6 rounded shadow max-w-md space-y-4">
+  <div>
+    <label class="block mb-1">Email</label>
+    <input id="email" type="email" class="w-full border px-3 py-2 rounded" required>
+  </div>
+  <div>
+    <label class="block mb-1">Password</label>
+    <input id="password" type="password" class="w-full border px-3 py-2 rounded" required>
+  </div>
+  <input type="hidden" name="id_token" id="id_token">
+  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
+</form>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDXLDSIOR7HHkPozEm45R0CZfvFcwQ-YWg",
+    authDomain: "your-app.firebaseapp.com",
+    projectId: "your-app-id"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const form = document.getElementById("firebaseLoginForm");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
+
+      // Submit form manually with ID token
+      const response = await fetch("/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `id_token=${encodeURIComponent(idToken)}`
+      });
+
+      if (response.redirected) {
+        window.location.href = response.url;
+      } else {
+        alert("Login failed. Please check credentials or permissions.");
+      }
+    } catch (err) {
+      alert("Firebase Error: " + err.message);
+    }
+  });
+</script>
+{% endblock %}

@@ -12,3 +12,9 @@ pydantic[email]
 httpx 
 redis[asyncio]
 slowapi
+python-multipart
+itsdangerous
+jinja2
+aiofiles
+cloudinary
+python-slugify

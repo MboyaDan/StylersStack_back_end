@@ -8,5 +8,6 @@ class CategoryCreate(CategoryBase):
 
 class Category(CategoryBase):
     id: int
+    slug:str
 
     model_config = ConfigDict(from_attributes =True)
