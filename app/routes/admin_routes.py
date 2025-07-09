@@ -5,6 +5,15 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from firebase_admin import auth as firebase_auth
+from app.templates_engine import templates
+from app.models.order_model import Order
+from app.models.payment_model import Payment
+from fastapi import Query
+from datetime import datetime, timedelta
+from app.models.order_item_model import OrderItem
+from app.models.user_model import User
+
+
 
 from app.dependencies import get_db
 from app.models.product_model import Product
@@ -12,7 +21,6 @@ from app.models.category_model import Category
 from app.utils.cloudinary_upload import upload_image_to_cloudinary
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 # 🔐 Protect admin routes
@@ -268,3 +276,111 @@ def restore_product(
 
     request.session["flash"] = "Product restored successfully!"
     return RedirectResponse(url="/admin/archived-products", status_code=303)
+
+# 🗂️ Orders and Payments Management
+
+
+
+@router.get("/orders", response_class=HTMLResponse)
+def admin_orders(
+    request: Request,
+    db: Session = Depends(get_db),
+    status: str = Query(default=None),
+    start_date: str = Query(default=None),
+    end_date: str = Query(default=None),
+    user=Depends(require_admin)
+):
+    query = db.query(Order)
+
+    if status:
+        query = query.filter(Order.status == status)
+
+    if start_date:
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(Order.created_at >= start)
+        except ValueError:
+            pass
+
+    if end_date:
+        try:
+            end = datetime.strptime(end_date, "%Y-%m-%d")
+            query = query.filter(Order.created_at <= end)
+        except ValueError:
+            pass
+
+    orders = query.order_by(Order.created_at.desc()).all()
+    return templates.TemplateResponse("orders.html", {
+        "request": request,
+        "orders": orders
+    })
+
+
+
+@router.get("/payments", response_class=HTMLResponse)
+def admin_payments(
+    request: Request,
+    db: Session = Depends(get_db),
+    status: str = Query(default=None),
+    method: str = Query(default=None),
+    user=Depends(require_admin)
+):
+    query = db.query(Payment)
+
+    if status:
+        query = query.filter(Payment.status == status)
+
+    if method:
+        query = query.filter(Payment.payment_method == method)
+
+    payments = query.order_by(Payment.created_at.desc()).all()
+    return templates.TemplateResponse("payments.html", {
+        "request": request,
+        "payments": payments
+    })
+
+@router.get("/admin/orders/{order_id}", response_class=HTMLResponse)
+async def admin_order_detail(request: Request, order_id: int, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    payment = db.query(Payment).filter(Payment.order_id == str(order.id)).first()
+
+    # Optional: Order items, if you have a table for that
+    items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all() if hasattr(Order, "items") else []
+
+    return templates.TemplateResponse("admin/order_detail.html", {
+        "request": request,
+        "order": order,
+        "payment": payment,
+        "items": items
+    })
+
+
+from sqlalchemy.orm import joinedload
+
+@router.get("/users/{uid}", response_class=HTMLResponse)
+def admin_user_detail(uid: str, request: Request, db: Session = Depends(get_db)):
+    user = db.query(User)\
+        .options(joinedload(User.address), joinedload(User.payments), joinedload(User.orders))\
+        .filter(User.uid == uid).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return templates.TemplateResponse("user_details.html", {
+        "request": request,
+        "user": user
+    })
+
+
+
+@router.get("/users", response_class=HTMLResponse)
+def admin_user_list(request: Request, db: Session = Depends(get_db), user=Depends(require_admin)):
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    return templates.TemplateResponse("user_list.html", {
+        "request": request,
+        "users": users
+    })
+

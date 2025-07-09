@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6 text-primary">📦 Orders</h2>
+
+<!-- 🔍 Filters -->
+<form method="get" class="flex flex-wrap gap-2 mb-6">
+  <select name="status" class="px-3 py-2 border border-gray-300 rounded text-sm">
+    <option value="">All Status</option>
+    {% for s in ['pending', 'paid', 'delivered'] %}
+      <option value="{{ s }}" {% if request.query_params.get('status') == s %}selected{% endif %}>
+        {{ s.title() }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <input type="date" name="start_date"
+         value="{{ request.query_params.get('start_date', '') }}"
+         class="px-3 py-2 border border-gray-300 rounded text-sm" placeholder="Start date">
+
+  <input type="date" name="end_date"
+         value="{{ request.query_params.get('end_date', '') }}"
+         class="px-3 py-2 border border-gray-300 rounded text-sm" placeholder="End date">
+
+  <button type="submit"
+          class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+    Filter
+  </button>
+</form>
+
+<!-- 📊 Summary Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted">Total Orders</h4>
+    <p class="text-2xl font-semibold text-gray-800">{{ orders|length }}</p>
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted">Pending</h4>
+    <p class="text-xl font-medium text-yellow-600">
+      {{ orders | selectattr('status', 'equalto', 'pending') | list | length }}
+    </p>
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted">Delivered</h4>
+    <p class="text-xl font-medium text-green-700">
+      {{ orders | selectattr('status', 'equalto', 'delivered') | list | length }}
+    </p>
+  </div>
+</div>
+
+<!-- 📋 Orders Table -->
+<div class="bg-white shadow overflow-x-auto rounded-lg">
+  <table class="min-w-full divide-y divide-gray-200 text-sm text-gray-800">
+    <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      <tr>
+        <th class="px-4 py-2 text-left">Order ID</th>
+        <th class="px-4 py-2 text-left">User</th>
+        <th class="px-4 py-2 text-left">Total</th>
+        <th class="px-4 py-2 text-left">Status</th>
+        <th class="px-4 py-2 text-left">Created</th>
+        <th class="px-4 py-2 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for order in orders %}
+      <tr class="hover:bg-gray-50 transition">
+        <td class="px-4 py-2 font-medium text-primary">#{{ order.id }}</td>
+
+        <!-- 🔗 Link to user (optional) -->
+        <td class="px-4 py-2">
+          <a href="/admin/users/{{ order.user_uid }}"
+             class="text-blue-600 hover:underline">
+            {{ order.user_uid }}
+          </a>
+        </td>
+
+        <td class="px-4 py-2">Ksh {{ "%.2f"|format(order.total_amount) }}</td>
+
+        <td class="px-4 py-2">
+          {% if order.status == "paid" %}
+            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Paid</span>
+          {% elif order.status == "delivered" %}
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">Delivered</span>
+          {% else %}
+            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs capitalize">
+              {{ order.status }}
+            </span>
+          {% endif %}
+        </td>
+
+        <td class="px-4 py-2 text-muted">
+          {{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}
+        </td>
+
+        <td class="px-4 py-2">
+          <a href="/admin/orders/{{ order.id }}"
+             class="text-indigo-600 hover:text-indigo-800 text-sm font-medium underline">
+            View
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 📄 Pagination Placeholder -->
+{# Uncomment when implementing pagination
+<div class="mt-6">
+  <nav class="flex justify-between items-center">
+    <a href="?page={{ prev_page }}" class="text-sm text-primary hover:underline">← Previous</a>
+    <a href="?page={{ next_page }}" class="text-sm text-primary hover:underline">Next →</a>
+  </nav>
+</div>
+#}
+
+{% endblock %}

@@ -20,3 +20,6 @@ docker-compose.override.yml
 
 # VS Code settings (optional)
 .vscode/
+tailwindcss
+app/static/css/tailwind.css
+app/static/css/*.css

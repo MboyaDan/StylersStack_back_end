@@ -8,9 +8,7 @@ Create Date: 2025-06-26 11:11:22.831502
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.sql import table, column
-from sqlalchemy import String, text
-
+from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision: str = '102ad414ed63'
@@ -20,20 +18,46 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Step 1: Add the column as nullable
-    op.add_column('categories', sa.Column('slug', sa.String(length=100), nullable=True))
+    conn = op.get_bind()
+    inspector = inspect(conn)
 
-    # Step 2: Update existing rows (assuming name is lowercase and slug-safe)
-    # You can customize the slug logic if needed
-    op.execute("UPDATE categories SET slug = LOWER(name)")
+    # 🔍 Check existing columns in 'categories'
+    columns = [col["name"] for col in inspector.get_columns("categories")]
 
-    # Step 3: Alter to NOT NULL
-    op.alter_column('categories', 'slug', nullable=False)
+    # ✅ Step 1: Add column if not present
+    if "slug" not in columns:
+        op.add_column("categories", sa.Column("slug", sa.String(length=100)))
 
-    # Step 4: Add unique constraint
-    op.create_unique_constraint('uq_categories_slug', 'categories', ['slug'])
+    # 🔄 Refresh the inspector after adding column
+    inspector = inspect(conn)
+    columns = [col["name"] for col in inspector.get_columns("categories")]
+
+    # ✅ Step 2: Populate slugs only if slug column exists
+    if "slug" in columns:
+        op.execute("UPDATE categories SET slug = LOWER(name)")
+
+        # ✅ Step 3: Set NOT NULL only if it's currently nullable
+        for col in inspector.get_columns("categories"):
+            if col["name"] == "slug" and col["nullable"]:
+                op.execute("ALTER TABLE categories ALTER COLUMN slug SET NOT NULL")
+                break
+
+    # ✅ Step 4: Add unique constraint if not present
+    existing_constraints = [uc["name"] for uc in inspector.get_unique_constraints("categories")]
+    if "uq_categories_slug" not in existing_constraints:
+        op.create_unique_constraint("uq_categories_slug", "categories", ["slug"])
 
 
 def downgrade() -> None:
-    op.drop_constraint('uq_categories_slug', 'categories', type_='unique')
-    op.drop_column('categories', 'slug')
+    # Drop unique constraint if it exists
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    existing_constraints = [uc["name"] for uc in inspector.get_unique_constraints("categories")]
+
+    if "uq_categories_slug" in existing_constraints:
+        op.drop_constraint("uq_categories_slug", "categories", type_="unique")
+
+    # Drop slug column if it exists
+    columns = [col["name"] for col in inspector.get_columns("categories")]
+    if "slug" in columns:
+        op.execute("ALTER TABLE categories DROP COLUMN slug")

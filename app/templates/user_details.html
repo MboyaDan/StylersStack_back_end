@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}User: {{ user.uid }}{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold text-primary mb-6">👤 User: {{ user.uid }}</h2>
+
+<!-- 🔹 User Summary -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted">User ID</h4>
+    <p class="text-lg font-semibold text-gray-800">{{ user.uid }}</p>
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted">Orders</h4>
+    <p class="text-xl font-medium">{{ user.orders|length }}</p>
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted">Payments</h4>
+    <p class="text-xl font-medium">{{ user.payments|length }}</p>
+  </div>
+</div>
+
+<!-- 🔹 Address Section -->
+<h3 class="text-lg font-bold text-gray-700 mb-3">🏠 Address</h3>
+<div class="bg-white shadow rounded p-4 mb-6">
+  {% if user.address %}
+    <h4 class="text-sm text-muted">Full Address</h4>
+    <p class="text-lg font-semibold text-gray-800">{{ user.address.address }}</p>
+  {% else %}
+    <p class="text-gray-500 italic">No address on file.</p>
+  {% endif %}
+</div>
+
+<!-- 🔹 Orders Section -->
+<h3 class="text-lg font-bold text-gray-700 mb-3">🛍 Orders</h3>
+<div class="bg-white shadow overflow-x-auto rounded mb-6">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
+      <tr>
+        <th class="px-4 py-2">Order ID</th>
+        <th class="px-4 py-2">Amount</th>
+        <th class="px-4 py-2">Status</th>
+        <th class="px-4 py-2">Created</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for order in user.orders %}
+      <tr>
+        <td class="px-4 py-2">
+          <a href="/admin/orders/{{ order.id }}" class="text-blue-600 hover:underline">{{ order.id }}</a>
+        </td>
+        <td class="px-4 py-2">Ksh {{ "%.2f"|format(order.total_amount) }}</td>
+        <td class="px-4 py-2 capitalize">{{ order.status }}</td>
+        <td class="px-4 py-2 text-muted">{{ order.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 🔹 Payments Section -->
+<h3 class="text-lg font-bold text-gray-700 mb-3">💳 Payments</h3>
+<div class="bg-white shadow overflow-x-auto rounded">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
+      <tr>
+        <th class="px-4 py-2">Payment ID</th>
+        <th class="px-4 py-2">Amount</th>
+        <th class="px-4 py-2">Method</th>
+        <th class="px-4 py-2">Status</th>
+        <th class="px-4 py-2">Created</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for payment in user.payments %}
+      <tr>
+        <td class="px-4 py-2">{{ payment.id }}</td>
+        <td class="px-4 py-2">{{ payment.amount }} {{ payment.currency }}</td>
+        <td class="px-4 py-2 capitalize">{{ payment.payment_method }}</td>
+        <td class="px-4 py-2">
+          {% if payment.status == 'succeeded' %}
+            <span class="text-green-700">Success</span>
+          {% elif payment.status == 'failed' %}
+            <span class="text-red-600">Failed</span>
+          {% else %}
+            <span class="text-yellow-600">Pending</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-2 text-muted">{{ payment.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<a href="/admin/dashboard" class="inline-block mt-6 text-primary hover:underline">← Back to Dashboard</a>
+{% endblock %}

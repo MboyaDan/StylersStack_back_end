@@ -18,4 +18,5 @@ class User(Base):
     address = relationship("Address", back_populates="user", uselist=False)
     payments = relationship("Payment", back_populates="user")
     
+    orders = relationship("Order", back_populates="user")
 

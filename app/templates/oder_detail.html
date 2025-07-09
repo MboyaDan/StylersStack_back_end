@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold text-primary mb-6">📄 Order #{{ order.id }}</h2>
+
+<!-- 🔹 Order Summary -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted mb-1">Status</h4>
+    {% if order.status == 'paid' %}
+      <span class="text-sm font-medium px-2 py-1 bg-green-100 text-green-800 rounded-full">Paid</span>
+    {% elif order.status == 'delivered' %}
+      <span class="text-sm font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Delivered</span>
+    {% else %}
+      <span class="text-sm font-medium px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full capitalize">
+        {{ order.status }}
+      </span>
+    {% endif %}
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted mb-1">Total Amount</h4>
+    <p class="text-lg font-semibold text-gray-800">Ksh {{ "%.2f"|format(order.total_amount) }}</p>
+  </div>
+  <div class="bg-white shadow rounded p-4">
+    <h4 class="text-sm text-muted mb-1">Date</h4>
+    <p class="text-sm text-gray-700">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+  </div>
+</div>
+
+<!-- 👤 User Info -->
+<div class="bg-white shadow rounded p-4 mb-6">
+  <h3 class="text-sm text-muted mb-2">Placed by</h3>
+  <a href="/admin/users/{{ order.user_uid }}" class="text-blue-600 hover:underline text-sm">
+    {{ order.user_uid }}
+  </a>
+</div>
+
+<!-- 💳 Payment Info -->
+{% if payment %}
+<div class="bg-white shadow rounded p-4 mb-6">
+  <h3 class="text-sm text-muted mb-2">Payment Info</h3>
+  <ul class="text-sm text-gray-700 space-y-1">
+    <li><strong>Method:</strong> {{ payment.payment_method|capitalize }}</li>
+    <li><strong>Status:</strong>
+      {% if payment.status == 'succeeded' %}
+        <span class="text-green-700 font-medium">Succeeded</span>
+      {% elif payment.status == 'failed' %}
+        <span class="text-red-600 font-medium">Failed</span>
+      {% else %}
+        <span class="text-yellow-600 font-medium">Pending</span>
+      {% endif %}
+    </li>
+    <li><strong>Phone:</strong> {{ payment.phone_number }}</li>
+    <li><strong>Currency:</strong> {{ payment.currency }}</li>
+    <li><strong>Paid At:</strong> {{ payment.created_at.strftime('%d %b %Y, %I:%M %p') }}</li>
+  </ul>
+</div>
+{% endif %}
+
+<!-- 🧾 Items (Optional: if you store order items) -->
+{% if items %}
+<div class="bg-white shadow overflow-x-auto rounded-lg mb-6">
+  <table class="min-w-full divide-y divide-gray-200 text-sm text-gray-800">
+    <thead class="bg-gray-100 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      <tr>
+        <th class="px-4 py-2 text-left">Product</th>
+        <th class="px-4 py-2 text-left">Quantity</th>
+        <th class="px-4 py-2 text-left">Price</th>
+        <th class="px-4 py-2 text-left">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for item in items %}
+      <tr>
+        <td class="px-4 py-2">{{ item.product_name }}</td>
+        <td class="px-4 py-2">{{ item.quantity }}</td>
+        <td class="px-4 py-2">Ksh {{ "%.2f"|format(item.unit_price) }}</td>
+        <td class="px-4 py-2">Ksh {{ "%.2f"|format(item.quantity * item.unit_price) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<a href="/admin/orders" class="inline-block text-sm text-primary hover:underline">← Back to Orders</a>
+
+{% endblock %}

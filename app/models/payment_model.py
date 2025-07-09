@@ -6,16 +6,18 @@ from app.database import Base
 class Payment(Base):
     __tablename__ = "payments"
 
-    id = Column(String, primary_key=True, index=True)  # ← Changed from Integer to String
+    id = Column(String, primary_key=True, index=True)
     user_id = Column(String, ForeignKey("users.uid")) 
-    order_id = Column(String, unique=True, index=True)
+    order_id = Column(String, ForeignKey("orders.id"), index=True)  
     amount = Column(Float)
     currency = Column(String, nullable=False)  
     phone_number = Column(String)
-    payment_method = Column(String)  # 'mpesa', 'stripe', 'cod'
-    payment_intent_id = Column(String, unique=True, nullable=True)  # For Stripe payments
-    status = Column(String, default="pending")  # 'pending', 'succeeded', 'failed'
-    created_at = Column(DateTime(timezone=True),default= lambda:datetime.now(timezone.utc))
-    checkout_request_id = Column(String, nullable=True)  # For M-Pesa payments
+    payment_method = Column(String)
+    payment_intent_id = Column(String, unique=True, nullable=True)
+    status = Column(String, default="pending")
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    checkout_request_id = Column(String, nullable=True)
 
     user = relationship("User", back_populates="payments")
+    order = relationship("Order", back_populates="payments")
+
