@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
   <title>{% block title %}Admin{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="/static/css/tailwind.css" rel="stylesheet">
@@ -26,8 +25,17 @@
         <a href="/admin/categories" class="text-gray-600 hover:text-blue-600">Categories</a>
         <a href="/admin/settings" class="text-gray-600 hover:text-blue-600">Settings</a>
       </div>
-      <div>
-        <!-- Optional future user profile/settings -->
+
+      <!-- ✅ Logout Button -->
+      <div class="flex items-center space-x-4">
+        <form method="POST" action="/admin/logout">
+          <button
+            type="submit"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+          >
+            Logout
+          </button>
+        </form>
       </div>
     </div>
   </nav>

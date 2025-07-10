@@ -32,6 +32,10 @@
           <a href="/admin/products/{{ product.id }}/restore"
              class="text-green-600 hover:underline"
              onclick="return confirm('Restore this product to dashboard?');">Restore</a>
+            <a href="/admin/products/{{ product.id }}/hard-delete"
+            class="text-red-600 hover:underline"
+            onclick="return confirm('This will permanently delete the product. Are you sure?');">Delete</a>
+
         </td>
       </tr>
       {% endfor %}

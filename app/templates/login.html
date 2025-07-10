@@ -1,45 +1,128 @@
 {% extends "base.html" %}
 {% block title %}Admin Login{% endblock %}
-{% block content %}
-<h2 class="text-xl font-bold mb-4">Admin Login</h2>
 
-<form id="firebaseLoginForm" method="POST" class="bg-white p-6 rounded shadow max-w-md space-y-4">
-  <div>
-    <label class="block mb-1">Email</label>
-    <input id="email" type="email" class="w-full border px-3 py-2 rounded" required>
+{% block content %}
+<div class="min-h-screen bg-gray-100 flex items-center justify-center px-4 relative">
+
+  <!-- Overlay -->
+  <div id="overlay" class="absolute inset-0 bg-white bg-opacity-80 backdrop-blur-sm z-10 hidden flex items-center justify-center">
+    <div class="text-center">
+      <svg class="w-10 h-10 text-blue-600 animate-spin mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+      </svg>
+      <p class="text-sm text-gray-600">Signing you in...</p>
+    </div>
   </div>
-  <div>
-    <label class="block mb-1">Password</label>
-    <input id="password" type="password" class="w-full border px-3 py-2 rounded" required>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed z-50 top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-80 text-center">
+      <h2 id="modalTitle" class="text-xl font-bold mb-2 text-gray-800"></h2>
+      <p id="modalMessage" class="text-sm text-gray-600 mb-4"></p>
+      <button id="modalClose" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">OK</button>
+    </div>
   </div>
-  <input type="hidden" name="id_token" id="id_token">
-  <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
-</form>
+
+  <!-- Login Form -->
+  <div class="w-full max-w-sm bg-white p-8 rounded-xl shadow-md z-0">
+    <div class="mb-6 text-center">
+      <h1 class="text-2xl font-bold text-gray-800">🔐 Admin Login</h1>
+      <p class="text-sm text-gray-500">Enter your credentials to continue</p>
+    </div>
+
+    {% if flash %}
+      <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-4 rounded text-sm">
+        {{ flash }}
+      </div>
+    {% endif %}
+
+    <form id="firebaseLoginForm" method="POST" class="space-y-5 relative">
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <input id="email" name="email" type="email" required autocomplete="email"
+          class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+        <p id="emailError" class="mt-1 text-sm text-red-600 hidden"></p>
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <div class="relative">
+          <input id="password" name="password" type="password" required autocomplete="current-password"
+            class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md pr-10 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+          <button type="button" id="togglePassword"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-800">Show</button>
+        </div>
+        <p id="passwordError" class="mt-1 text-sm text-red-600 hidden"></p>
+      </div>
+
+      <p id="globalError" class="text-sm text-red-600 text-center hidden"></p>
+      <input type="hidden" name="id_token" id="id_token" />
+
+      <button type="submit" id="loginButton"
+        class="w-full flex justify-center items-center bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+        <span id="loginBtnText">Login</span>
+        <svg id="spinner" class="hidden ml-2 h-5 w-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+      </button>
+    </form>
+
+    <p class="text-center mt-6 text-xs text-gray-400">Welcome to Admin Dashboard</p>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyDXLDSIOR7HHkPozEm45R0CZfvFcwQ-YWg",
-    authDomain: "your-app.firebaseapp.com",
-    projectId: "your-app-id"
+    apiKey: "AIzaSyBq72KkybOa70gqa2PBH37GNHmJ5BFOoqA",
+    authDomain: "stylestacks-app.firebaseapp.com",
+    projectId: "stylestacks-app",
+    storageBucket: "stylestacks-app.appspot.com",
+    messagingSenderId: "159806414965",
+    appId: "1:159806414965:web:c045a237367ead5521d83c",
+    measurementId: "G-WJLRCHG201"
   };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
   const form = document.getElementById("firebaseLoginForm");
+  const overlay = document.getElementById("overlay");
+  const modal = document.getElementById("modal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalMessage = document.getElementById("modalMessage");
+  const modalClose = document.getElementById("modalClose");
+  const emailError = document.getElementById("emailError");
+  const passwordError = document.getElementById("passwordError");
+  const globalError = document.getElementById("globalError");
+  const loginButton = document.getElementById("loginButton");
+  const loginBtnText = document.getElementById("loginBtnText");
+  const spinner = document.getElementById("spinner");
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+
+    emailError.classList.add("hidden");
+    passwordError.classList.add("hidden");
+    globalError.classList.add("hidden");
+
+    const email = form.email.value;
+    const password = form.password.value;
+
+    loginButton.disabled = true;
+    spinner.classList.remove("hidden");
+    loginBtnText.textContent = "Logging in...";
+    overlay.classList.remove("hidden");
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // Submit form manually with ID token
       const response = await fetch("/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -47,13 +130,52 @@
       });
 
       if (response.redirected) {
-        window.location.href = response.url;
+        if (response.url.includes("/admin/login")) {
+          throw new Error("Login failed. You may not have admin access.");
+        }
+
+        modalTitle.textContent = "Success 🎉";
+        modalMessage.textContent = "Login successful. Redirecting...";
+        modal.classList.remove("hidden");
+
+        setTimeout(() => {
+          window.location.href = response.url;
+        }, 1000);
       } else {
-        alert("Login failed. Please check credentials or permissions.");
+        throw new Error("Unexpected error during login.");
       }
     } catch (err) {
-      alert("Firebase Error: " + err.message);
+      const msg = err.message;
+
+      if (msg.includes("user-not-found")) {
+        emailError.textContent = "No account found with this email.";
+        emailError.classList.remove("hidden");
+      } else if (msg.includes("wrong-password")) {
+        passwordError.textContent = "Incorrect password.";
+        passwordError.classList.remove("hidden");
+      } else {
+        modalTitle.textContent = "Login Failed ❌";
+        modalMessage.textContent = msg;
+        modal.classList.remove("hidden");
+      }
+    } finally {
+      overlay.classList.add("hidden");
+      spinner.classList.add("hidden");
+      loginBtnText.textContent = "Login";
+      loginButton.disabled = false;
     }
+  });
+
+  document.getElementById("togglePassword").addEventListener("click", () => {
+    const input = document.getElementById("password");
+    const btn = document.getElementById("togglePassword");
+    const isVisible = input.type === "text";
+    input.type = isVisible ? "password" : "text";
+    btn.textContent = isVisible ? "Show" : "Hide";
+  });
+
+  modalClose.addEventListener("click", () => {
+    modal.classList.add("hidden");
   });
 </script>
 {% endblock %}

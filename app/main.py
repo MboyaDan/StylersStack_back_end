@@ -12,6 +12,10 @@ from slowapi.errors import RateLimitExceeded
 from app.limiter import limiter
 from app.templates_engine import templates
 
+from fastapi import Request, HTTPException
+from fastapi.responses import RedirectResponse
+
+
 from app.routes import (
     product_routes,
     category_routes,
@@ -53,3 +57,8 @@ app.include_router(admin_routes.router)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Fashion Backend API, it is up"}
+
+@app.exception_handler(403)
+async def forbidden_exception_handler(request: Request, exc: HTTPException):
+    request.session["flash"] = "Please login to access the admin panel."
+    return RedirectResponse(url="/admin/login", status_code=303)
