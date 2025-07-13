@@ -160,7 +160,7 @@ async def upload_product(
         db.refresh(new_product)
 
         request.session["flash"] = "Product added successfully!"
-        return RedirectResponse(url="/admin/dashboard", status_code=303)
+        return RedirectResponse(url="/admin/products", status_code=303)
 
     except Exception as e:
         db.rollback()
@@ -296,7 +296,7 @@ def archive_product(
     db.commit()
 
     request.session["flash"] = "Product archived successfully!"
-    return RedirectResponse(url="/admin/dashboard", status_code=303)
+    return RedirectResponse(url="/admin/products", status_code=303)
 
 
 # 🔁 Restore Archived Product

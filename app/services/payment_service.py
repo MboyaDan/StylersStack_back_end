@@ -80,63 +80,57 @@ async def handle_mpesa_callback(request: Request, db: Session, background_tasks:
     logging.info("[M-Pesa Callback] Raw payload:\n" + json.dumps(data, indent=2))
 
     stk_callback = data.get("Body", {}).get("stkCallback", {})
+    if not stk_callback:
+        logging.error("[M-Pesa] Missing 'stkCallback' in payload.")
+        return {"ResultCode": 1, "ResultDesc": "Invalid callback payload"}
+
     result_code = stk_callback.get("ResultCode")
+    checkout_id = stk_callback.get("CheckoutRequestID")
     callback_metadata = stk_callback.get("CallbackMetadata", {}).get("Item", [])
 
-    order_id = None
+    if not checkout_id:
+        logging.error("[M-Pesa] Missing CheckoutRequestID in callback.")
+        return {"ResultCode": 1, "ResultDesc": "Missing CheckoutRequestID"}
+
+    # Retry logic: wait a few moments for DB write to complete if needed
     payment = None
-
-    # Try to extract AccountReference
-    for item in callback_metadata:
-        if item.get("Name") == "AccountReference":
-            order_id = str(item.get("Value"))
-            logging.info(f"[M-Pesa] Extracted order_id from AccountReference: {order_id}")
+    for attempt in range(3):
+        payment = payment_crud.get_payment_by_checkout_id(db, checkout_id)
+        if payment:
             break
-
-    # Fallback: use CheckoutRequestID
-    if not order_id:
-        checkout_id = stk_callback.get("CheckoutRequestID")
-        if checkout_id:
-            logging.warning(f"[M-Pesa] AccountReference missing, using CheckoutRequestID: {checkout_id}")
-            # 🧠Retry logic in case payment not written yet
-            for attempt in range(3):
-                payment = payment_crud.get_payment_by_checkout_id(db, checkout_id)
-                if payment:
-                    order_id = payment.order_id
-                    break
-                time.sleep(0.5)  # wait a bit before retry
-        else:
-            logging.error("[M-Pesa] Missing AccountReference and CheckoutRequestID")
-            return {"ResultCode": 1, "ResultDesc": "Missing order identifiers"}
-
-    # Fallback: fetch by order_id
-    if not payment:
-        payment = payment_crud.get_payment_by_order_id(db, order_id)
+        logging.warning(f"[M-Pesa] Payment not yet found for CheckoutRequestID: {checkout_id}, attempt {attempt + 1}")
+        time.sleep(0.5)
 
     if not payment:
-        logging.error(f"[M-Pesa] Payment not found for order_id: {order_id}")
+        logging.error(f"[M-Pesa] No matching payment for CheckoutRequestID: {checkout_id}")
         return {"ResultCode": 1, "ResultDesc": "Payment not found"}
 
     if payment.status in ("succeeded", "failed"):
         logging.info(f"[M-Pesa] Payment already marked as {payment.status}")
         return {"ResultCode": 0, "ResultDesc": "Already processed"}
 
-    # Finalize and update status
     new_status = "succeeded" if result_code == 0 else "failed"
-    logging.info(f"[M-Pesa] Updating status to '{new_status}' for order_id: {order_id}")
+    logging.info(f"[M-Pesa] Updating status to '{new_status}' for payment_intent_id: {payment.payment_intent_id}")
 
     updated = payment_crud.update_payment_status(db, payment.payment_intent_id, new_status)
     if not updated:
         logging.error(f"[M-Pesa] DB update failed for payment_intent_id: {payment.payment_intent_id}")
         return {"ResultCode": 1, "ResultDesc": "Update failed"}
 
-    db.commit()  # Ensure the update is persisted
+    db.commit()
 
-    # notify user via fcm
+    # Notify user
     user: User = payment.user
     if user and user.fcm_token:
         title = "Payment Status Update"
-        body = f"Your payment for order {order_id} was {'successful' if new_status == 'succeeded' else 'unsuccessful'}."
-        background_tasks.add_task(send_fcm_notification, token=user.fcm_token, title=title, body=body, data={"order_id": order_id, "status": new_status})
+        body = f"Your payment for order {payment.order_id} was {'successful' if new_status == 'succeeded' else 'unsuccessful'}."
+        background_tasks.add_task(
+            send_fcm_notification,
+            token=user.fcm_token,
+            title=title,
+            body=body,
+            data={"order_id": payment.order_id, "status": new_status}
+        )
 
     return {"ResultCode": 0, "ResultDesc": "Callback received successfully"}
+
