@@ -12,7 +12,6 @@ class PaymentMethod(str, Enum):
 
 
 class PaymentCreate(BaseModel):
-    order_id: str
     amount: float
     currency: str
     payment_method: PaymentMethod
@@ -50,15 +49,13 @@ class PaymentCreate(BaseModel):
 
 
 class PaymentResponse(BaseModel):
-    id: str
-    order_id: str
-    user_id: str
     amount: float
     currency: str
     payment_method: PaymentMethod
     payment_intent_id: str
     status: str
     created_at: datetime
+    checkout_request_id: Optional[str] = None
 
     class Config:
         orm_mode = True

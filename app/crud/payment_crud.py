@@ -1,25 +1,40 @@
 from sqlalchemy.orm import Session
 from app.models.payment_model import Payment
 from app.schemas.payment_schema import PaymentCreate
-import uuid
 from datetime import datetime, timezone
+import time
+import random
+import string
+
+def generate_unique_payment_intent_id(db: Session, prefix="ORD") -> str:
+    """
+    Generates a unique payment intent ID with a timestamp and random string,
+    and checks DB for uniqueness to avoid rare collisions.
+    """
+    while True:
+        timestamp = int(time.time() * 1000)
+        random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        intent_id = f"{prefix}-{timestamp}-{random_part}"
+        
+        exists = db.query(Payment).filter_by(payment_intent_id=intent_id).first()
+        if not exists:
+            return intent_id
+
+
 
 def create_payment(db: Session, payment_data: PaymentCreate, user_id: str) -> Payment:
-    payment_intent_id = str(uuid.uuid4())
+    payment_intent_id = generate_unique_payment_intent_id(db)
     status = "succeeded" if payment_data.payment_method.lower() == "cod" else "pending"
 
     payment = Payment(
-        id=str(uuid.uuid4()),
-        order_id=payment_data.order_id,
+        payment_intent_id=payment_intent_id,
         user_id=user_id,
         amount=payment_data.amount,
         currency=payment_data.currency,
         payment_method=payment_data.payment_method.lower(),
-        payment_intent_id=payment_intent_id,
         status=status,
         phone_number=payment_data.phone_number,
         checkout_request_id=payment_data.checkout_request_id,
-        created_at=datetime.now(timezone.utc),
     )
     print(f"[create_payment] Received method={payment_data.payment_method}, phone={payment_data.phone_number}")
 
@@ -28,9 +43,6 @@ def create_payment(db: Session, payment_data: PaymentCreate, user_id: str) -> Pa
     db.commit()
     db.refresh(payment)
     return payment
-
-def get_payment_by_order_id(db: Session, order_id: str) -> Payment | None:
-    return db.query(Payment).filter(Payment.order_id == order_id).first()
 
 def get_payment_by_intent_id(db: Session, intent_id: str) -> Payment | None:
     return db.query(Payment).filter(Payment.payment_intent_id == intent_id).first()
@@ -61,3 +73,7 @@ def update_checkout_id(db: Session, payment_intent_id: str, checkout_request_id:
     return None
 def get_payment_by_checkout_id(db: Session, checkout_id: str) -> Payment | None:
     return db.query(Payment).filter(Payment.checkout_request_id == checkout_id).first()
+
+
+
+

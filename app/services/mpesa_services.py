@@ -74,10 +74,10 @@ def initiate_mpesa_payment(payment) -> Dict[str, Any]:
             "PartyB": business_short_code,
             "PhoneNumber": payment.phone_number,
             "CallBackURL": callback_url,
-            "AccountReference": payment.order_id,
+            "AccountReference": payment.payment_intent_id,
             "TransactionDesc": "Order Payment"
         }
-        logging.info(f"[M-Pesa] Sending AccountReference: {payment.order_id}")
+        logging.info(f"[M-Pesa] Sending AccountReference: {payment.payment_intent_id}")
 
         #loging the phone number used for payment
         logging.info(f"Full M-Pesa STK payload: {payload}")
@@ -105,7 +105,7 @@ def initiate_mpesa_payment(payment) -> Dict[str, Any]:
                 "details": response_data
             }
 
-        logging.info(f"[M-Pesa STK Push] Success for order {payment.order_id}: {response_data}")
+        logging.info(f"[M-Pesa STK Push] Success for order {payment.payment_intent_id}: {response_data}")
         return response_data
 
     except RequestException as e:

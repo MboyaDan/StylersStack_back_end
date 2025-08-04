@@ -24,10 +24,11 @@ from app.routes import (
     address_router,
     payments_routes,
     user_router,
-    admin_routes
+    admin_routes,
+    order_router
 )
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=True)
 
 # --- Rate limiting middleware ---
 app.state.limiter = limiter
@@ -52,6 +53,7 @@ app.include_router(address_router.router)
 app.include_router(payments_routes.router)
 app.include_router(user_router.router)
 app.include_router(admin_routes.router)
+app.include_router(order_router.router)
 
 # --- Simple root route ---
 @app.get("/")
