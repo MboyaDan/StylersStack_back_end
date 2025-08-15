@@ -26,7 +26,7 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
 
-# 🚪 Admin Login Page
+# Admin Login Page
 @router.post("/login")
 def login(request: Request, id_token: str = Form(...)):
     try:
@@ -59,7 +59,7 @@ def favicon():
     return RedirectResponse(url="/static/favicon.ico")  
 
 
-# 📊 Admin Dashboard 
+# Admin Dashboard 
 @router.get("/dashboard")
 def admin_dashboard(
     request: Request,
@@ -105,7 +105,7 @@ def admin_dashboard(
 
 
 
-# 🧾 Product Creation Form
+# Product Creation Form
 @router.get("/products/new")
 def new_product_form(
     request: Request,
@@ -119,7 +119,7 @@ def new_product_form(
     })
 
 
-# ⬆️ Upload Product Handler
+# Upload Product Handler
 @router.post("/products/new")
 async def upload_product(
     request: Request,
@@ -167,7 +167,7 @@ async def upload_product(
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 
-# 📂 View & Add Categories
+# View & Add Categories
 @router.get("/categories", response_class=HTMLResponse)
 def view_categories(
     request: Request,
@@ -200,7 +200,7 @@ def create_category(
     return RedirectResponse(url="/admin/categories", status_code=303)
 
 
-# 📝 Edit Product Form
+# Edit Product Form
 @router.get("/products/{product_id}/edit")
 def edit_product_form(
     product_id: int,
@@ -222,7 +222,7 @@ def edit_product_form(
     })
 
 
-# ⬆️ Update Product Handler
+#Update Product Handler
 @router.post("/products/{product_id}/edit")
 async def update_product(
     product_id: int,
@@ -266,7 +266,7 @@ async def update_product(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
 
-# 🗃️ Archived Products View
+# Archived Products View
 @router.get("/archived-products")
 def archived_products(
     request: Request,
@@ -280,7 +280,7 @@ def archived_products(
     })
 
 
-# 🗑️ Archive (Soft Delete) Product
+#  Archive (Soft Delete) Product
 @router.get("/products/{product_id}/delete")
 def archive_product(
     product_id: int,
@@ -398,18 +398,18 @@ def admin_payments(
         "payments": payments
     })
 
-@router.get("/admin/orders/{order_id}", response_class=HTMLResponse)
-async def admin_order_detail(request: Request, order_id: int, db: Session = Depends(get_db)):
+@router.get("/orders/{order_id}", response_class=HTMLResponse)
+async def admin_order_detail(request: Request, order_id: str, db: Session = Depends(get_db)):
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    payment = db.query(Payment).filter(Payment.order_id == str(order.id)).first()
+    payment = db.query(Payment).filter(Payment.user_id == str(order.id)).first()
 
     # Optional: Order items, if you have a table for that
     items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all() if hasattr(Order, "items") else []
 
-    return templates.TemplateResponse("admin/order_detail.html", {
+    return templates.TemplateResponse("order_detail.html", {
         "request": request,
         "order": order,
         "payment": payment,

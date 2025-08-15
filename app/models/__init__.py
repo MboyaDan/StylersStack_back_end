@@ -1,5 +1,3 @@
-# app/models/__init__.py
-
 from .category_model import Category
 from .payment_model import Payment
 from .address_model import Address
@@ -11,3 +9,4 @@ from .order_model import Order
 from .favorite_model import Favorite
 from .promotion_model import Promotion
 from .image_model import UploadedImage
+from .order_item_model import OrderItem
