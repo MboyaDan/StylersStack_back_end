@@ -1,21 +1,22 @@
 # StylerStack Backend API
+# StylerStack Backend API
 
 A **Node.js + FastAPI hybrid backend** powering the StylerStack mobile app with payments, caching, rate limiting, and an admin dashboard.  
-This backend manages everything from **user authentication** to **inventory control**, **order processing**, and **real-time payment verification** via Mpesa Daraja API + Firebase Cloud Messaging (FCM).
+This backend manages everything from **secure API access via Firebase Auth + JWTs** to **inventory control, order processing, image management (Cloudinary), and real-time payment verification** via Mpesa Daraja API + Firebase Cloud Messaging (FCM).
+
 
 ---
-
 ## 🚀 Features
 - **Authentication & Security**
-  - JWT-based authentication
-  - Role-based access (user vs admin)
+  - **Firebase Authentication** – Handles user login & role-based access (admin/user)
+  - **JWT middleware** – Verifies Firebase ID tokens and issues JWTs for backend API access
   - Rate limiting on sensitive endpoints (e.g., payments)
 - **Payments**
   - Mpesa Daraja API integration (STK Push & callbacks)
   - Webhook support for payment confirmation
   - Real-time status pushed to frontend via FCM
 - **Caching & Performance**
-  - **Redis** for caching frequently accessed data
+  - **Redis** for caching frequently accessed data (e.g., products, carts)
   - Redis-backed session & token management
 - **Media Management**
   - **Cloudinary** integration for product images
@@ -32,20 +33,43 @@ This backend manages everything from **user authentication** to **inventory cont
   - Address management
   - Orders (create, update, track)
 
+
 ---
 
 ## 🛠️ Tech Stack
-- **FastAPI (Python)** – API services (authentication, payments, core app logic)
+- **FastAPI (Python)** – Core API services (products, categories, payments, orders)
 - **Node.js + Tailwind** – Admin dashboard (inventory + analytics)
-- **Redis** – Caching layer + rate limiting
-- **PostgreSQL** – Main relational database
-- **Docker / Docker Compose** – Containerized deployment
-- **Firebase Admin SDK** – Sending FCM notifications to frontend
+- **Firebase Auth** – User authentication & role-based access
+- **JWT Middleware** – Secure backend endpoints
+- **PostgreSQL** – Primary relational database
+- **SQLAlchemy + Alembic** – ORM & database migrations
+- **Redis** – Caching layer & rate limiting
+- **Docker / Docker Compose** – Containerized development & deployment
+- **Firebase Admin SDK** – Verify Firebase tokens & send FCM notifications
 - **Mpesa Daraja API** – Payment gateway integration
-- **Cloudinary** – Image storage and CDN
+- **Cloudinary** – Image storage & CDN delivery
 
 ---
 
+## 🔐 Authentication Flow
+
+User Request (POST /products)  
+       ↓  
+   🔐 Auth Middleware (`verify_firebase_token`)  
+       ↓  
+📨 Router (/products)  
+       ↓  
+📦 Schema (ProductCreate)  
+       ↓  
+🧠 Service or CRUD Function  
+       ↓  
+🗄️ SQLAlchemy Model (DB Write)  
+       ↓  
+📤 Response Schema (Product)  
+       ↓  
+Client Response
+
+---
 ## 🔑 Environment Variables
 
 The backend requires a `.env` file. An example is provided in `.env.example`.
@@ -144,4 +168,5 @@ docker-compose up --build
 
 ### Products
 ![Product Screen](https://github.com/MboyaDan/StylersStack_back_end/blob/main/docs/product_screen.png)
+
 
