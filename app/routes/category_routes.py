@@ -6,7 +6,7 @@ from app.schemas.category_schema import Category, CategoryCreate
 from app.crud.category_crud import create_category, get_categories, get_category_by_name
 from app.dependencies import get_db
 from app.utils.firebase_auth import verify_firebase_token
-from app.utils.slugify import generate_slug  # You’ll create this helper
+from app.utils.slugify import generate_slug 
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 

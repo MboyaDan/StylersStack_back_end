@@ -1,22 +1,35 @@
-# Use the official Python image.
-FROM python:3.10-slim
+# Use a secure base image (Debian Bookworm)
+FROM python:3.10-slim-bookworm
 
-# Set the working directory inside the container.
+# Environment variables for better Python behavior
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
+# Set working directory
 WORKDIR /app
 
-# Copy only requirements first for caching layers.
+# Update OS packages to patch vulnerabilities
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
+# Install build dependencies (needed for some Python packages like psycopg2)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for Docker cache efficiency
 COPY requirements.txt .
 
-# Install dependencies.
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install dependencies with extended timeout & retries
+RUN pip install --upgrade pip \
+    && pip install --default-timeout=100 --retries=5 --no-cache-dir -r requirements.txt
 
-# Copy the entire project into the container.
+# Copy the rest of the application
 COPY . .
 
-# Expose port 8000 for FastAPI
+# Expose FastAPI port
 EXPOSE 8000
 
-# Command to run the FastAPI app with hot reload
+# Run FastAPI with hot reload
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-ENV PYTHONPATH=/app
